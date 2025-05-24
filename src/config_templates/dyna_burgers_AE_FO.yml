@@ -1,0 +1,151 @@
+exp_dir: dyna_burgers
+n_train_iter: 1000 # 40 #40000
+dyn_fit_freq: 10
+fcnet_hiddens: [128, 128]
+use_pbt: False
+description: Baseline experiment with AE and very small latent dimension
+
+global_dir: "../data/sindyrl_data/AE"
+folder_name: "/BATCH_burgers_FO_2D_surrogate"
+log_dir: "/logs"
+plot_dir: "/plots"
+checkpoint_dir: "/checkpoints"
+# enable to set this flag manually in the code when loading a model
+dummy_logger: False
+
+# used for rolling out new on-policy data for 
+# dynamics fitting
+real_env:
+  class: BurgersControlEnv
+  config: 
+    n_observation: 256
+    n_action: 8
+    Q_weight: 100.0
+    R_weight: 0.01
+    diffusivity_constant: 1.0
+    control_sup_width: 0.125
+
+
+drl:
+  class: PPO
+  config:
+    training:
+      gamma: 0.99 # RL gamma value for horizon
+      lr: 3.0e-4 # const lr, without a scheduler
+      # lr_schedule: [[0, 1.0e-3], [40, 5.0e-4], [60, 1.0e-4]]
+      # hydro 3.0e-4 # const lr, without a scheduler
+      lambda_: 0.95 # GAE value
+      # vf_loss_coeff: 0.5 # ceoff of val func loss
+      # vf_clip_param: 0.2 # value function clipping
+      # clip_param: 0.2 # PPO clip param
+      # grad_clip: 0.5 # clip global norm of gradients
+      grad_clip: 0.5 # clip global norm of gradients
+      train_batch_size: 256
+    environment:
+      env: 
+      env_config:
+        use_real_env: False 
+        use_real_reward: True
+
+        # both of them should be irrelevant
+        init_real_on_start: True # package curr. does not have the correct interface
+        reset_from_buffer: False
+        # this number has to be larger than the discretization in time
+        # afterwards the trajectory is trunacted
+        max_episode_steps: 20  # default = 1000
+        real_env_class: BurgersControlEnv
+        real_env_config: 
+          n_observation: 256
+          n_action: 8
+          Q_weight: 100.0
+          R_weight: 0.01
+          diffusivity_constant: 1.0
+          control_sup_width: 0.12525
+        ensemble_modes: 
+          dyn: median
+          rew: median
+        init_weights: True
+        obs_dim: 256
+        act_dim: 8
+        # act_bounds: 
+        # obs_bounds: 
+    framework: torch
+    # num_gpus: 4
+    evaluation: 
+      evaluation_interval: # None
+
+
+# both not needed
+off_policy_buffer:
+  config:
+    max_traj:
+    max_samples:
+  init: 
+    type: collect
+    kwargs: 
+      # n_steps works, tested
+      n_steps: 200 # 12000 
+      n_steps_reset: 20 
+
+on_policy_buffer:
+  config:
+    max_traj: 
+    max_samples: 2400
+  collect:
+    # n_steps works, tested
+    n_steps: 200 # 200
+    n_steps_reset: 20
+
+
+# not used
+dynamics_model:
+  class: AutoEncoderDynamicsModel
+  config:
+    state_dim: 256
+    control_dim: 8
+    # dimensions of the hidden space
+    state_hidden_dim: 22
+    control_hidden_dim: 4
+    # dimensions of the surrogate space
+    state_latent_dim: 2
+    control_latent_dim: 2
+    # AE training specifications
+    n_epochs: 100
+    optimizer_kwargs:
+      lr: 1.0e-3 # default 1.0e-3 (1.0 to make it float, not string)
+
+    dict_dim: 10
+    'feature_library': 
+      name: affine
+      kwargs:
+        poly_deg: 3
+        # n_state: 10
+        # n_control: 8
+        poly_int: True
+        tensor: False
+    'loss_function':
+      lambda_0: 1.0
+      lambda_1: 1.0
+      lambda_2: 1.0
+
+rew_model:
+  class: EnsembleSparseRewardModel
+  config:
+    'use_control': True
+    'optimizer': 
+        'base_optimizer':
+            'name': 'STLSQ'
+            'kwargs': 
+                'alpha':   1.0e-5
+                'threshold': 1.0e-4
+        'ensemble':
+            'bagging': True
+            'library_ensemble': True
+            'n_models': 20
+    'feature_library': 
+        name: PolynomialLibrary
+        kwargs:
+            degree: 2
+            include_bias: True
+            include_interaction: True
+
