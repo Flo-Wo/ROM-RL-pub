@@ -17,13 +17,12 @@ in your console.
     Model-Based Reinforcement Learning" by Zolman et al., see [arxiv-link](https://arxiv.org/abs/2403.09110).
     Check ``/SindyRL-AE/documents/LICENSE.pdf``.
 
-    We extended the code by the following new functionalities:
+    We extended the code by the following new functionalities to enable the support of PDE experiments
+    and our auto encoder framework:
 
     - ``dynamics.py`` containing the ``AutoEncoderDynamicsModel(BaseDynamicsModel)``,
     - ``burgers.py`` wrapping the ``controlgym`` environment for the first experiment of the paper,
     - ``navier_stokes.py`` wrapping ``PDEControlGym`` environment for the second experiment of the paper,
-
-    and adjusted minor parts of the code to make the autoencoder work.
 
 - ``/src``: This sub-folder contains the actual configuration files, training and evaluation scripts.
     - ``run_experiments.sh`` will run all experiments present in the paper.
