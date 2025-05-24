@@ -1,7 +1,7 @@
 # ROM-RL-pub
 Code for the paper "Interpretable and Efficient Data-Driven Discovery and Control of Distributed Systems"
-by Florian Wolf, Nicolò Botteghi, Urban Fasel, Andrea Manzoni
-available on [arxiv](https://arxiv.org/abs/2411.04098).
+by Florian Wolf, Nicolò Botteghi, Urban Fasel, and Andrea Manzoni.
+The preprint is available on [arxiv](https://arxiv.org/abs/2411.04098).
 
 To simply reproduce all experiments in the paper, execute
 ```shell
